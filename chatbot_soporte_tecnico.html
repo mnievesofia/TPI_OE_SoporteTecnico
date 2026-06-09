@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bot de Soporte Técnico – TechSoluciones S.A.</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1e2a3a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .app-wrapper {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .app-header {
+    background: #1565c0;
+    border-radius: 16px 16px 0 0;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .bot-avatar {
+    width: 42px; height: 42px;
+    background: #ffffff22;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .app-header h1 {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .app-header p {
+    color: #90caf9;
+    font-size: 12px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    background: #69f0ae;
+    border-radius: 50%;
+    margin-right: 4px;
+    display: inline-block;
+  }
+
+  .chat-window {
+    background: #f5f7fa;
+    height: 420px;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .msg {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .msg.bot {
+    background: #fff;
+    color: #1a2332;
+    border-radius: 4px 16px 16px 16px;
+    align-self: flex-start;
+    box-shadow: 0 1px 4px #0001;
+  }
+
+  .msg.user {
+    background: #1565c0;
+    color: #fff;
+    border-radius: 16px 4px 16px 16px;
+    align-self: flex-end;
+  }
+
+  .msg.error {
+    background: #fdecea;
+    color: #c62828;
+    border-left: 3px solid #ef5350;
+    border-radius: 4px 12px 12px 4px;
+    align-self: flex-start;
+  }
+
+  .msg.info {
+    background: #e3f2fd;
+    color: #0d47a1;
+    border-left: 3px solid #1565c0;
+    border-radius: 4px 12px 12px 4px;
+    align-self: flex-start;
+  }
+
+  .msg.success {
+    background: #e8f5e9;
+    color: #1b5e20;
+    border-left: 3px solid #43a047;
+    border-radius: 4px 12px 12px 4px;
+    align-self: flex-start;
+  }
+
+  .msg b { font-weight: 600; }
+
+  .options-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px 12px;
+    background: #f5f7fa;
+  }
+
+  .opt-btn {
+    background: #fff;
+    border: 1.5px solid #1565c0;
+    color: #1565c0;
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+  }
+
+  .opt-btn:hover { background: #1565c0; color: #fff; }
+  .opt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .input-row {
+    background: #fff;
+    border-radius: 0 0 16px 16px;
+    border-top: 1px solid #e0e0e0;
+    padding: 10px 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  #user-input {
+    flex: 1;
+    border: 1.5px solid #ddd;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.15s;
+  }
+
+  #user-input:focus { border-color: #1565c0; }
+
+  #send-btn {
+    background: #1565c0;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 38px; height: 38px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+
+  #send-btn:hover { background: #0d47a1; }
+
+  .ticket-card {
+    background: #fff;
+    border: 1px solid #c8e6c9;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: #2e7d32;
+    margin-top: 4px;
+  }
+
+  .ticket-card .tk-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .ticket-card .tk-label { color: #555; font-weight: 600; }
+  .ticket-card .tk-val { color: #1b5e20; }
+
+  .typing {
+    display: flex; gap: 4px; align-items: center;
+    padding: 10px 14px;
+    background: #fff;
+    border-radius: 4px 16px 16px 16px;
+    align-self: flex-start;
+    width: 58px;
+  }
+
+  .typing span {
+    width: 7px; height: 7px;
+    background: #aaa;
+    border-radius: 50%;
+    animation: bounce 1.1s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.18s; }
+  .typing span:nth-child(3) { animation-delay: 0.36s; }
+
+  @keyframes bounce {
+    0%,60%,100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  .db-badge {
+    font-size: 11px;
+    background: #ede7f6;
+    color: #512da8;
+    border-radius: 10px;
+    padding: 2px 8px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  <div class="app-header">
+    <div class="bot-avatar">🤖</div>
+    <div>
+      <h1>TechBot – Soporte Técnico</h1>
+      <p><span class="status-dot"></span>TechSoluciones S.A. · Nivel 1</p>
+    </div>
+  </div>
+
+  <div class="chat-window" id="chat"></div>
+
+  <div class="options-row" id="options-row"></div>
+
+  <div class="input-row">
+    <input type="text" id="user-input" placeholder="Escribí tu respuesta..." autocomplete="off"/>
+    <button id="send-btn" title="Enviar">➤</button>
+  </div>
+</div>
+
+<script>
+// =============================================
+// BASE DE DATOS SIMULADA
+// =============================================
+const DB_EMPLEADOS = {
+  "1001": { nombre: "Ana García",     area: "Administración" },
+  "1002": { nombre: "Carlos López",   area: "Ventas" },
+  "1003": { nombre: "María Torres",   area: "Sistemas" },
+  "1004": { nombre: "Pedro Díaz",     area: "Contabilidad" },
+  "1005": { nombre: "Laura Fernández",area: "RRHH" }
+};
+
+const DB_SOLUCIONES = {
+  hardware: [
+    { problema: "PC no enciende",        solucion: "Verificá que el cable de alimentación esté bien conectado. Probá con otro tomacorriente. Si tiene UPS, revisá que esté encendida." },
+    { problema: "Impresora no imprime",   solucion: "Revisá que la impresora esté encendida y con papel. Verificá la cola de impresión en Panel de Control → Dispositivos e Impresoras." },
+    { problema: "Monitor sin imagen",     solucion: "Comprobá el cable VGA/HDMI en ambos extremos. Probá presionar Win+P para cambiar la salida de video." },
+    { problema: "Teclado/mouse no responde", solucion: "Desconectá y reconectá el dispositivo. Si es USB, probá otro puerto. Si es inalámbrico, cambiá las pilas." }
+  ],
+  software: [
+    { problema: "No puedo acceder al sistema ERP", solucion: "Cerrá y volvé a abrir el navegador. Limpiá caché con Ctrl+Shift+Del. Si persiste, contactá a soporte para restablecer sesión." },
+    { problema: "Error al iniciar Windows",          solucion: "Reiniciá el equipo. Si el error persiste, intentá modo seguro (F8 al inicio) y ejecutá sfc /scannow en CMD." },
+    { problema: "Programa no abre / se congela",     solucion: "Abrí el Administrador de tareas (Ctrl+Alt+Del), finalizá la tarea y volvé a abrirlo. Si falla, reiniciá el equipo." },
+    { problema: "Olvidé mi contraseña de red",       solucion: "Ingresá a la intranet con tu usuario y usá la opción 'Olvidé mi contraseña'. Si no podés acceder, te asistimos desde aquí." }
+  ],
+  red: [
+    { problema: "Sin conexión a internet",           solucion: "Revisá el cable de red o la señal WiFi. Reiniciá el router apagándolo 30 segundos. Probá ejecutar: ipconfig /release y ipconfig /renew en CMD." },
+    { problema: "No puedo acceder a carpetas compartidas", solucion: "Verificá que estés conectado a la red corporativa. Comprobá el mapeo de unidades en el Explorador de Windows." },
+    { problema: "VPN no conecta",                    solucion: "Asegurate de tener internet activo primero. Reiniciá el cliente VPN. Si el error persiste, revisá tus credenciales con RRHH." },
+    { problema: "Lentitud de red",                   solucion: "Cerrá aplicaciones que consumen banda (streaming, descargas). Si el problema afecta a toda la oficina, avisamos al proveedor." }
+  ]
+};
+
+// =============================================
+// MÁQUINA DE ESTADOS
+// =============================================
+const ESTADOS = {
+  INICIO:           "INICIO",
+  ESPERA_LEGAJO:    "ESPERA_LEGAJO",
+  ESPERA_CATEGORIA: "ESPERA_CATEGORIA",
+  ESPERA_PROBLEMA:  "ESPERA_PROBLEMA",
+  ESPERA_RESOLUCION:"ESPERA_RESOLUCION",
+  ESCALADO:         "ESCALADO",
+  FINALIZADO:       "FINALIZADO"
+};
+
+let estado = ESTADOS.INICIO;
+let sesion = {
+  legajo: null,
+  empleado: null,
+  categoria: null,
+  problema: null,
+  solucion: null,
+  ticketId: null,
+  intentosLegajo: 0
+};
+
+// =============================================
+// FUNCIONES DE UI
+// =============================================
+const chat = document.getElementById("chat");
+const optionsRow = document.getElementById("options-row");
+const input = document.getElementById("user-input");
+
+function scrollDown() {
+  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
+}
+
+function addMsg(texto, tipo = "bot", html = false) {
+  const div = document.createElement("div");
+  div.className = "msg " + tipo;
+  if (html) div.innerHTML = texto;
+  else div.textContent = texto;
+  chat.appendChild(div);
+  scrollDown();
+  return div;
+}
+
+function addTicketCard(ticket) {
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  div.innerHTML = `<b>✅ Ticket registrado</b><br/><div class="ticket-card">
+    <div class="tk-row"><span class="tk-label">N° Ticket:</span><span class="tk-val">${ticket.id}</span></div>
+    <div class="tk-row"><span class="tk-label">Empleado:</span><span class="tk-val">${ticket.empleado}</span></div>
+    <div class="tk-row"><span class="tk-label">Área:</span><span class="tk-val">${ticket.area}</span></div>
+    <div class="tk-row"><span class="tk-label">Categoría:</span><span class="tk-val">${ticket.categoria}</span></div>
+    <div class="tk-row"><span class="tk-label">Problema:</span><span class="tk-val">${ticket.problema}</span></div>
+    <div class="tk-row"><span class="tk-label">Estado:</span><span class="tk-val">${ticket.estado}</span></div>
+    <span class="db-badge">📁 Guardado en base de datos</span>
+  </div>`;
+  chat.appendChild(div);
+  scrollDown();
+}
+
+function showTyping() {
+  const div = document.createElement("div");
+  div.className = "typing";
+  div.id = "typing-indicator";
+  div.innerHTML = "<span></span><span></span><span></span>";
+  chat.appendChild(div);
+  scrollDown();
+  return div;
+}
+
+function removeTyping() {
+  const t = document.getElementById("typing-indicator");
+  if (t) t.remove();
+}
+
+function setOptions(opciones) {
+  optionsRow.innerHTML = "";
+  opciones.forEach(op => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.textContent = op;
+    btn.onclick = () => handleUserInput(op);
+    optionsRow.appendChild(btn);
+  });
+}
+
+function clearOptions() {
+  optionsRow.innerHTML = "";
+}
+
+function botResponde(msgs, opciones = [], delay = 700) {
+  let t = 0;
+  const typing = showTyping();
+  setTimeout(() => {
+    removeTyping();
+    msgs.forEach((m, i) => {
+      setTimeout(() => {
+        if (typeof m === "object") {
+          if (m.tipo === "ticket") addTicketCard(m.data);
+          else addMsg(m.texto, m.tipo, m.html || false);
+        } else {
+          addMsg(m);
+        }
+        if (i === msgs.length - 1 && opciones.length > 0) {
+          setOptions(opciones);
+        }
+      }, i * 350);
+    });
+  }, delay);
+}
+
+// =============================================
+// LÓGICA DEL BOT
+// =============================================
+function generarTicketId() {
+  return "TK-" + Date.now().toString().slice(-6);
+}
+
+function validarLegajo(val) {
+  return /^\d{4}$/.test(val.trim());
+}
+
+function buscarEmpleado(legajo) {
+  return DB_EMPLEADOS[legajo.trim()] || null;
+}
+
+function handleUserInput(valor) {
+  const val = valor.trim();
+  if (!val) return;
+
+  clearOptions();
+  addMsg(val, "user");
+  input.value = "";
+
+  switch (estado) {
+
+    case ESTADOS.ESPERA_LEGAJO: {
+      if (!validarLegajo(val)) {
+        sesion.intentosLegajo++;
+        if (sesion.intentosLegajo >= 3) {
+          botResponde([
+            { texto: "⚠️ Ingresaste un legajo inválido 3 veces. Por favor comunicarte con Recursos Humanos para verificar tu legajo.", tipo: "error" }
+          ]);
+          estado = ESTADOS.FINALIZADO;
+        } else {
+          botResponde([
+            { texto: `⚠️ El legajo debe ser un número de 4 dígitos. Por favor intentá nuevamente (intento ${sesion.intentosLegajo}/3).`, tipo: "error" }
+          ]);
+        }
+        return;
+      }
+      const emp = buscarEmpleado(val);
+      if (!emp) {
+        sesion.intentosLegajo++;
+        if (sesion.intentosLegajo >= 3) {
+          botResponde([
+            { texto: "⚠️ No encontré tu legajo en el sistema tras 3 intentos. Por favor comunicarte con Recursos Humanos.", tipo: "error" }
+          ]);
+          estado = ESTADOS.FINALIZADO;
+        } else {
+          botResponde([
+            { texto: `❌ Legajo ${val} no encontrado en la base de datos. Verificá el número e intentá de nuevo (intento ${sesion.intentosLegajo}/3).`, tipo: "error" }
+          ]);
+        }
+        return;
+      }
+      sesion.legajo = val;
+      sesion.empleado = emp;
+      sesion.intentosLegajo = 0;
+      estado = ESTADOS.ESPERA_CATEGORIA;
+      botResponde([
+        `✅ Identidad verificada. ¡Hola, ${emp.nombre} (${emp.area})!`,
+        "¿Cuál es la categoría de tu problema?"
+      ], ["💻 Hardware", "🖥️ Software", "🌐 Red / Conectividad"]);
+      break;
+    }
+
+    case ESTADOS.ESPERA_CATEGORIA: {
+      let cat = null;
+      if (val.includes("Hardware")) cat = "hardware";
+      else if (val.includes("Software")) cat = "software";
+      else if (val.includes("Red") || val.includes("Conectividad")) cat = "red";
+
+      if (!cat) {
+        botResponde([
+          { texto: "⚠️ Por favor seleccioná una de las opciones disponibles: Hardware, Software o Red.", tipo: "error" }
+        ], ["💻 Hardware", "🖥️ Software", "🌐 Red / Conectividad"]);
+        return;
+      }
+      sesion.categoria = cat;
+      estado = ESTADOS.ESPERA_PROBLEMA;
+      const problemas = DB_SOLUCIONES[cat].map(p => p.problema);
+      botResponde([
+        `Categoría: ${cat.toUpperCase()}. ¿Cuál es tu problema específico?`
+      ], problemas);
+      break;
+    }
+
+    case ESTADOS.ESPERA_PROBLEMA: {
+      const lista = DB_SOLUCIONES[sesion.categoria];
+      const encontrado = lista.find(p => p.problema === val);
+      if (!encontrado) {
+        botResponde([
+          { texto: "⚠️ Por favor seleccioná uno de los problemas de la lista.", tipo: "error" }
+        ], DB_SOLUCIONES[sesion.categoria].map(p => p.problema));
+        return;
+      }
+      sesion.problema = encontrado.problema;
+      sesion.solucion = encontrado.solucion;
+      estado = ESTADOS.ESPERA_RESOLUCION;
+      botResponde([
+        { texto: `📋 <b>Solución sugerida:</b><br/>${encontrado.solucion}<br/><span class="db-badge">📁 Consultado en base de datos</span>`, tipo: "info", html: true },
+        "¿Pudiste resolver el problema con esta solución?"
+      ], ["✅ Sí, se resolvió", "❌ No, necesito más ayuda"]);
+      break;
+    }
+
+    case ESTADOS.ESPERA_RESOLUCION: {
+      if (val.includes("Sí") || val.includes("resolvió")) {
+        sesion.ticketId = generarTicketId();
+        estado = ESTADOS.FINALIZADO;
+        botResponde([
+          { tipo: "ticket", data: {
+            id: sesion.ticketId,
+            empleado: sesion.empleado.nombre,
+            area: sesion.empleado.area,
+            categoria: sesion.categoria.toUpperCase(),
+            problema: sesion.problema,
+            estado: "✅ Resuelto"
+          }},
+          { texto: "¡Perfecto! Me alegra que se haya resuelto. Que tengas un buen día 👋", tipo: "success" }
+        ]);
+      } else if (val.includes("No") || val.includes("ayuda")) {
+        sesion.ticketId = generarTicketId();
+        estado = ESTADOS.ESCALADO;
+        botResponde([
+          { tipo: "ticket", data: {
+            id: sesion.ticketId,
+            empleado: sesion.empleado.nombre,
+            area: sesion.empleado.area,
+            categoria: sesion.categoria.toUpperCase(),
+            problema: sesion.problema,
+            estado: "⚠️ Escalado a técnico N2"
+          }},
+          { texto: `🔧 Tu caso fue escalado a un técnico de Nivel 2. El ticket ${sesion.ticketId} fue registrado. Un técnico te contactará en menos de 2 horas hábiles.`, tipo: "error" }
+        ]);
+      } else {
+        botResponde([
+          { texto: "⚠️ Por favor indicá si el problema se resolvió o no.", tipo: "error" }
+        ], ["✅ Sí, se resolvió", "❌ No, necesito más ayuda"]);
+      }
+      break;
+    }
+
+    case ESTADOS.FINALIZADO:
+    case ESTADOS.ESCALADO: {
+      botResponde([
+        { texto: "Este ticket ya fue cerrado. Para una nueva consulta, recargá la página.", tipo: "info" }
+      ]);
+      break;
+    }
+  }
+}
+
+// =============================================
+// EVENTOS
+// =============================================
+document.getElementById("send-btn").onclick = () => {
+  if (input.value.trim()) handleUserInput(input.value);
+};
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && input.value.trim()) handleUserInput(input.value);
+});
+
+// =============================================
+// INICIO DEL BOT
+// =============================================
+function iniciarBot() {
+  estado = ESTADOS.ESPERA_LEGAJO;
+  botResponde([
+    "👋 ¡Bienvenido al sistema de Soporte Técnico de TechSoluciones S.A.!",
+    "Soy TechBot y voy a ayudarte a resolver tu problema técnico.",
+    "Para comenzar, por favor ingresá tu número de legajo (4 dígitos):"
+  ], [], 400);
+}
+
+iniciarBot();
+</script>
+</body>
+</html>
