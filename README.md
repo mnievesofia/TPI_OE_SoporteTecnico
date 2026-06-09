@@ -114,7 +114,7 @@ git clone https://github.com/mnievesofia/TPI_OE_SoporteTecnico.git
 
 ## IA utilizada
 
-Se utilizó **Claude (Anthropic)** como asistente durante el desarrollo: diseño del flujo BPMN, implementación de la máquina de estados, generación del código y redacción de la documentación.
+Se utilizó Claude (Anthropic) como herramienta de consulta para orientación en la estructura del diagrama BPMN y revisión de la lógica del código.
 
 ---
 
